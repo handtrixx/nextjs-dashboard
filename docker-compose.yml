@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  nextjs-dashboard:
+    container_name: nextjs-dashboard
+    build: .
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./:/nextjs-dashboard
+    environment:
+      - TZ=Europe/Berlin
+    networks:
+      - default
