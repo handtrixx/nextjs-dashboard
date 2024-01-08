@@ -22,7 +22,7 @@ Type error: Cannot find name 'useFormState'.
    Linting and checking validity of types  ...%
 
 ```
-To fix this add
+To fix this add if required
 ```
 import { useFormState } from 'react-dom';
 ```
