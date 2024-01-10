@@ -1,7 +1,6 @@
 version: "3.9"
 services:
   nextjs-dashboard:
-    container_name: nextjs-dashboard
     build: .
     ports:
       - 3000:3000
@@ -10,6 +9,18 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./:/nextjs-dashboard
     environment:
-      - TZ=Europe/Berlin
+      TZ: Europe/Berlin
     networks:
+      - default
+  nextjs-db:
+    image: docker.io/library/postgres:15
+    restart: unless-stopped
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: nextjs-dashboard
+      POSTGRES_USER: nextjs-dashboard
+      POSTGRES_PASSWORD: nextjs-dashboard
+      TZ: Europe/Berlin
+    networks: 
       - default
