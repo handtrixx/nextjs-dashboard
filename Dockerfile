@@ -16,9 +16,5 @@ RUN npm install
 EXPOSE 3000
 
 # Run the app
-#CMD ["npm", "run", "dev"]
-ENTRYPOINT ["tail", "-f", "/dev/null"]
-
-
-#@next/swc-darwin-arm64
-#@next/swc-linux-arm64
+CMD ["npm", "run", "dev"]
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
