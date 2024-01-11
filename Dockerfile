@@ -7,6 +7,7 @@ RUN apt-get update && apt-get upgrade -y
 
 # Bring or project directory into the container
 ADD . /nextjs-dashboard
+WORKDIR /nextjs-dashboard
 VOLUME /nextjs-dashboard
 
 # install the used modules into the node_modules folder
