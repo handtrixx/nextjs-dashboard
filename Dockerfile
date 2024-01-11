@@ -1,21 +1,20 @@
-# Get the latest official node.js container from docker hub
+# Use an official Node.js runtime as a base image
 FROM node:latest
-LABEL maintainer="handtrixxx <niklas.stephan@gmail.com>"
 
-# install the latest uperating system updates
-RUN apt-get update && apt-get upgrade -y
+# Set the working directory inside the container
+WORKDIR /usr/src/app
 
-# Bring or project directory into the container
-ADD . /nextjs-dashboard
-WORKDIR /nextjs-dashboard
-VOLUME /nextjs-dashboard
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
-# install the used modules into the node_modules folder
+# Install dependencies
 RUN npm install
 
-# Expose port 3000
+# Copy the rest of the application code to the working directory
+COPY . .
+
+# Expose the port your app runs on
 EXPOSE 3000
 
-# Run the app
+# Define the command to run your application
 CMD ["npm", "run", "dev"]
-#ENTRYPOINT ["tail", "-f", "/dev/null"]

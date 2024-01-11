@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./:/nextjs-dashboard
+      - ./:/usr/src/app
     environment:
       TZ: Europe/Berlin
     networks:
