@@ -13,7 +13,7 @@ services:
     networks:
       - default
   nextjs-db:
-    image: docker.io/library/postgres:15
+    image: postgres:16.1
     restart: unless-stopped
     volumes:
       - ./db:/var/lib/postgresql/data
