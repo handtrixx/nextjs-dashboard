@@ -3,6 +3,9 @@
 # database
 /db
 
+# docker stuff
+/startup-script.sh
+
 # dependencies
 /node_modules
 /.pnp

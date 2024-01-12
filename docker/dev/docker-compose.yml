@@ -1,20 +1,17 @@
 version: "3.9"
 services:
   nextjs-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
       - 3000:3000
     restart: unless-stopped
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ../../.:/usr/src/app
+      - ../../:/usr/src/app/
+      - ./startup-script.sh:/usr/src/app/startup-script.sh
     environment:
       TZ: Europe/Berlin
     networks:
       - default
-    command: /usr/src/app/startup-script.sh
   nextjs-db:
     image: postgres:16.1
     restart: unless-stopped

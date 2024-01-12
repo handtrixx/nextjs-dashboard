@@ -4,14 +4,10 @@ FROM node:latest
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
-COPY ../../package*.json ./
-
-# Install dependencies
-RUN npm install
-
 # Copy the rest of the application code to the working directory
 COPY ../../. .
+
+RUN npm install -g npm
 
 # Copy the startup script to the container
 COPY startup-script.sh /usr/src/app/startup-script.sh
@@ -23,4 +19,4 @@ RUN chmod +x /usr/src/app/startup-script.sh
 EXPOSE 3000
 
 # Define the command with a fallback value
-CMD ["/usr/src/app/startup-script.sh", "npm", "start"]
+CMD ["sh","/usr/src/app/startup-script.sh"]
