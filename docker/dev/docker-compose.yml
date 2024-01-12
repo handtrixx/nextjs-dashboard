@@ -8,8 +8,6 @@ services:
     volumes:
       - ../../:/usr/src/app/
       - ./startup-script.sh:/usr/src/app/startup-script.sh
-    environment:
-      TZ: Europe/Berlin
     networks:
       - default
   nextjs-db:
@@ -21,6 +19,5 @@ services:
       POSTGRES_DB: nextjs-dashboard
       POSTGRES_USER: nextjs-dashboard
       POSTGRES_PASSWORD: nextjs-dashboard
-      TZ: Europe/Berlin
     networks: 
       - default

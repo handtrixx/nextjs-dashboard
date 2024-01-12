@@ -1,8 +1,4 @@
 #!/bin/bash
-
-# Log file location
-LOG_FILE=/usr/src/app/app.log
-
 rm -R /usr/src/app/node_modules/
 
 # Start your Node.js application
