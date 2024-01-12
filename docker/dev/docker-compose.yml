@@ -21,3 +21,5 @@ services:
       POSTGRES_PASSWORD: nextjs-dashboard
     networks: 
       - default
+
+  #docker compose logs nextjs-dashboard
