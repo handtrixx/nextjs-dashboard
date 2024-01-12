@@ -8,19 +8,19 @@ RUN apt-get update && apt-get upgrade -y
 WORKDIR /usr/src/app
 
 # Copy the rest of the application code to the working directory
-COPY ../../. .
+COPY --chown=node:node ../../. .
 
 # update npm package manager if required
 RUN npm install -g npm
 
-# Copy the environment variables to the container
-COPY .env /usr/src/app/.env
-
 # Copy the startup script to the container
-COPY startup-script.sh /usr/src/app/startup-script.sh
+COPY --chown=node:node startup-script.sh /usr/src/app/startup-script.sh
 
 # Give execute permissions to the script
 RUN chmod +x /usr/src/app/startup-script.sh
+
+# set user to node
+USER node
 
 # Expose the port your app runs on
 EXPOSE 3000
