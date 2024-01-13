@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     volumes:
       - ../../:/usr/src/app/
-      - ./startup-script.sh:/usr/src/app/startup-script.sh
+      - ./app-startup.sh:/usr/src/app/app-startup.sh
     networks:
       - default
     env_file:

@@ -1,7 +1,7 @@
 # Use an official Node.js runtime as a base image
 FROM node:latest
 
-# Update OS mostly for enjoy latest security updates
+# Update OS mostly to enjoy latest security updates
 RUN apt-get update && apt-get upgrade -y
 
 # Set the working directory inside the container
@@ -14,10 +14,10 @@ COPY --chown=node:node ../../. .
 RUN npm install -g npm
 
 # Copy the startup script to the container
-COPY --chown=node:node startup-script.sh /usr/src/app/startup-script.sh
+COPY --chown=node:node app-startup.sh /usr/src/app/app-startup.sh
 
 # Give execute permissions to the script
-RUN chmod +x /usr/src/app/startup-script.sh
+RUN chmod +x /usr/src/app/app-startup.sh
 
 # set user to node
 USER node
@@ -25,5 +25,5 @@ USER node
 # Expose the port your app runs on
 EXPOSE 3000
 
-# Define the command with a fallback value
-CMD ["sh","/usr/src/app/startup-script.sh"]
+# Define the startup command
+CMD ["sh","/usr/src/app/app-startup.sh"]
