@@ -10,15 +10,8 @@ services:
       - ./startup-script.sh:/usr/src/app/startup-script.sh
     networks:
       - default
-    environment:
-      - POSTGRES_URL=postgres://default:VcRKSvhsI4M8@ep-crimson-mode-17833496-pooler.us-east-1.postgres.vercel-storage.com:5432/verceldb
-      - POSTGRES_PRISMA_URL=postgres://default:VcRKSvhsI4M8@ep-crimson-mode-17833496-pooler.us-east-1.postgres.vercel-storage.com:5432/verceldb?pgbouncer=true&connect_timeout=15
-      - POSTGRES_URL_NON_POOLING=postgres://default:VcRKSvhsI4M8@ep-crimson-mode-17833496.us-east-1.postgres.vercel-storage.com:5432/verceldb
-      - POSTGRES_USER=default
-      - POSTGRES_HOST=ep-crimson-mode-17833496-pooler.us-east-1.postgres.vercel-storage.com
-      - POSTGRES_PASSWORD=VcRKSvhsI4M8
-      - POSTGRES_DATABASE=verceldb
-      - AUTH_SECRET=08AOEU9KxtnbB0hGPz80nPJPTdtmeHVTP6N9ZIfEVMQ=
+    env_file:
+      - .env
   nextjs-db:
     image: postgres:16.1
     restart: unless-stopped
