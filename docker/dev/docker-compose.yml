@@ -17,11 +17,7 @@ services:
     restart: unless-stopped
     volumes:
       - ../../db:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: nextjs-dashboard
-      POSTGRES_USER: nextjs-dashboard
-      POSTGRES_PASSWORD: nextjs-dashboard
+    env_file:
+      - .env
     networks: 
       - default
-
-  #docker compose logs nextjs-dashboard
