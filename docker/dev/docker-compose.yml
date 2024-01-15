@@ -13,7 +13,7 @@ services:
     env_file:
       - .env
   nextjs-db:
-    image: postgres:16.1
+    image: postgres:15
     restart: unless-stopped
     volumes:
       - ../../db:/var/lib/postgresql/data
@@ -21,3 +21,13 @@ services:
       - .env
     networks: 
       - default
+  nextjs-pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - 5050:80
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=niklas.stephan@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=germane
