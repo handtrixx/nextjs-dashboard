@@ -1,17 +1,5 @@
 version: "3.9"
 services:
-  nextjs-dashboard:
-    build: .
-    ports:
-      - 3000:3000
-    restart: unless-stopped
-    volumes:
-      - ../../:/usr/src/app/
-      - ./app-startup.sh:/usr/src/app/app-startup.sh
-    networks:
-      - default
-    env_file:
-      - .env
   nextjs-db:
     image: postgres:15
     restart: unless-stopped
@@ -19,8 +7,28 @@ services:
       - ../../db:/var/lib/postgresql/data
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-h", "${POSTGRES_HOST}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks: 
       - default
+  nextjs-dashboard:
+    build: .
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    depends_on:
+      nextjs-db:
+          condition: service_healthy
+    volumes:
+      - ../../:/usr/src/app/
+      - ./app-startup.sh:/usr/src/app/app-startup.sh
+    networks:
+      - default
+    env_file:
+      - .env
   nextjs-pgadmin:
     image: dpage/pgadmin4:latest
     ports:

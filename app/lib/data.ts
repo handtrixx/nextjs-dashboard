@@ -1,16 +1,10 @@
-//import { sql } from '@vercel/postgres';
 import { Pool } from 'pg';
-const host = process.env.POSTGRES_HOST;
-const user = process.env.POSTGRES_USER;
-const database = process.env.POSTGRES_DB;
-const password = process.env.POSTGRES_PASSWORD;
-const port = process.env.POSTGRES_PORT;
 const pool = new Pool({
-  host,
-  user,
-  database,
-  password,
-  port,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  host: process.env.POSTGRES_HOST,
+  port: process.env.POSTGRES_PORT,
+  database: process.env.POSTGRES_DB,
 });
 import {
   CustomerField,
@@ -29,15 +23,8 @@ export async function fetchRevenue() {
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
   noStore();
   try {
-    // Artificially delay a response for demo purposes.
-    // Don't do this in production :)
-
     console.log('Fetching revenue data...');
-
     const data = await pool.query(<Revenue>`SELECT * FROM revenue`);
-
-    console.log('Data fetch completed after 3 seconds.');
-
     return data.rows;
   } catch (error) {
     console.error('Database Error:', error);
@@ -138,11 +125,11 @@ export async function fetchFilteredInvoices(
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
+      customers.name ILIKE '%${query}%' OR
+      customers.email ILIKE '%${query}%' OR
+      invoices.amount::text ILIKE '%${query}%' OR
+      invoices.date::text ILIKE '%${query}%' OR
+      invoices.status ILIKE '%${query}%'
       ORDER BY invoices.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `,
@@ -157,17 +144,19 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string) {
   try {
+ 
     noStore();
+  
     const count = await pool.query(`SELECT COUNT(*)
     FROM invoices
     JOIN customers ON invoices.customer_id = customers.id
     WHERE
-      customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
-  `);
+      customers.name ILIKE '%${query}%' OR
+      customers.email ILIKE '%${query}%' OR
+      invoices.amount::text ILIKE '%${query}%' OR
+      invoices.date::text ILIKE '%${query}%' OR
+      invoices.status ILIKE '%${query}%'
+  `); 
 
     const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
     return totalPages;
@@ -188,7 +177,7 @@ export async function fetchInvoiceById(id: string) {
         invoices.amount,
         invoices.status
       FROM invoices
-      WHERE invoices.id = ${id};
+      WHERE invoices.id = '${id}';
     `,
     );
 
@@ -207,13 +196,13 @@ export async function fetchInvoiceById(id: string) {
 
 export async function fetchCustomers() {
   try {
-    const data = await sql<CustomerField>`
+    const data = await pool.query(<CustomerField>`
       SELECT
         id,
         name
       FROM customers
       ORDER BY name ASC
-    `;
+    `);
 
     const customers = data.rows;
     return customers;
@@ -239,8 +228,8 @@ export async function fetchFilteredCustomers(query: string) {
 		FROM customers
 		LEFT JOIN invoices ON customers.id = invoices.customer_id
 		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
+		  customers.name ILIKE '%${query}%' OR
+        customers.email ILIKE '%${query}%'
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
 		ORDER BY customers.name ASC
 	  `,

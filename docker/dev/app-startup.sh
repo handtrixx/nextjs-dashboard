@@ -2,7 +2,8 @@
 
 echo Installing node modules from package.json
 npm install --no-progress
-npm npm run seed
+echo Create DB schema and example data if not exisiting
+npm run seed
 echo Starting your Node.js application
 npm run dev 
 
