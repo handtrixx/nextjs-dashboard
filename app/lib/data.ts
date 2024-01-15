@@ -3,7 +3,6 @@ const pool = new Pool({
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   host: process.env.POSTGRES_HOST,
-  port: process.env.POSTGRES_PORT,
   database: process.env.POSTGRES_DB,
 });
 import {
@@ -24,7 +23,7 @@ export async function fetchRevenue() {
   noStore();
   try {
     console.log('Fetching revenue data...');
-    const data = await pool.query(<Revenue>`SELECT * FROM revenue`);
+    const data = await pool.query(`SELECT * FROM revenue`);
     return data.rows;
   } catch (error) {
     console.error('Database Error:', error);
@@ -36,7 +35,7 @@ export async function fetchLatestInvoices() {
   noStore();
   try {
     const data = await pool.query(
-      <LatestInvoiceRaw>`
+      `
       SELECT DISTINCT 
         invoices.id,
         invoices.date,
@@ -67,14 +66,8 @@ export async function fetchCardData() {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
     // how to initialize multiple queries in parallel with JS.
-    //const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
     const invoiceCountPromise = pool.query(`SELECT COUNT(*) FROM invoices`);
-    //const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
     const customerCountPromise = pool.query(`SELECT COUNT(*) FROM customers`);
-    //const invoiceStatusPromise = sql`SELECT
-    //     SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-    //     SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-    //     FROM invoices`;
     const invoiceStatusPromise = pool.query(`SELECT
          SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
@@ -113,7 +106,7 @@ export async function fetchFilteredInvoices(
 
   try {
     const invoices = await pool.query(
-      <InvoicesTable>`
+      `
       SELECT
         invoices.id,
         invoices.amount,
@@ -170,7 +163,7 @@ export async function fetchInvoiceById(id: string) {
   noStore();
   try {
     const data = await pool.query(
-      <InvoiceForm>`
+      `
       SELECT
         invoices.id,
         invoices.customer_id,
@@ -196,7 +189,7 @@ export async function fetchInvoiceById(id: string) {
 
 export async function fetchCustomers() {
   try {
-    const data = await pool.query(<CustomerField>`
+    const data = await pool.query(`
       SELECT
         id,
         name
@@ -216,7 +209,7 @@ export async function fetchFilteredCustomers(query: string) {
   noStore();
   try {
     const data = await pool.query(
-      <CustomersTableType>`
+      `
 		SELECT
 		  customers.id,
 		  customers.name,
