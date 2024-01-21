@@ -7,17 +7,20 @@
     "prettier:check": "prettier --check --ignore-unknown .",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node -r dotenv/config ./scripts/seed.js"
+    "seed": "node -r dotenv/config ./app/lib/seed.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
+    "@libsql/kysely-libsql": "^0.3.0",
     "@tailwindcss/forms": "^0.5.7",
     "@types/node": "20.5.7",
     "@vercel/postgres": "^0.5.1",
     "autoprefixer": "10.4.15",
     "bcrypt": "^5.1.1",
+    "better-sqlite3": "^9.3.0",
     "clsx": "^2.0.0",
-    "drizzle-orm": "^0.29.3",
+    "kysely": "^0.27.2",
+    "mysql2": "^3.7.1",
     "next": "^14.0.4",
     "next-auth": "^5.0.0-beta.4",
     "pg": "^8.11.3",
@@ -26,6 +29,8 @@
     "react-dom": "18.2.0",
     "sharp": "^0.33.2",
     "tailwindcss": "3.3.3",
+    "tarn": "^3.0.2",
+    "tedious": "^16.6.1",
     "typescript": "5.2.2",
     "use-debounce": "^10.0.0",
     "zod": "^3.22.2"
@@ -36,10 +41,10 @@
     "@types/react-dom": "18.2.14",
     "@vercel/style-guide": "^5.0.1",
     "dotenv": "^16.3.1",
-    "drizzle-kit": "^0.20.12",
     "eslint": "^8.52.0",
     "eslint-config-next": "^14.0.0",
     "eslint-config-prettier": "9.0.0",
+    "kysely-codegen": "^0.11.0",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "0.5.4"
   },

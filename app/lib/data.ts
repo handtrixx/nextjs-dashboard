@@ -1,21 +1,7 @@
-import { Pool } from 'pg';
-const pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-});
-import {
-  CustomerField,
-  CustomersTableType,
-  InvoiceForm,
-  InvoicesTable,
-  LatestInvoiceRaw,
-  User,
-  Revenue,
-} from './definitions';
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
+import { db } from './database';
+import { sql } from 'kysely';
 
 export async function fetchRevenue() {
   // Add noStore() here prevent the response from being cached.
@@ -23,8 +9,8 @@ export async function fetchRevenue() {
   noStore();
   try {
     console.log('Fetching revenue data...');
-    const data = await pool.query(`SELECT * FROM revenue`);
-    return data.rows;
+    const rows = await db.selectFrom('revenue').selectAll().execute();
+    return rows;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch revenue data.');
@@ -34,22 +20,22 @@ export async function fetchRevenue() {
 export async function fetchLatestInvoices() {
   noStore();
   try {
-    const data = await pool.query(
-      `
-      SELECT DISTINCT 
-        invoices.id,
-        invoices.date,
-        invoices.amount, 
-        customers.name, 
-        customers.image_url, 
-        customers.email
-      FROM 
-        invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      ORDER BY invoices.date DESC
-      LIMIT 5`,
-    );
-    const latestInvoices = data.rows.map((invoice) => ({
+    const data = await db
+      .selectFrom(['invoices', 'customers'])
+      .whereRef('invoices.customer_id', '=', 'customers.id')
+      .select([
+        'invoices.id',
+        'invoices.date',
+        'invoices.amount',
+        'customers.name',
+        'customers.image_url',
+        'customers.email',
+      ])
+      .orderBy('invoices.date desc')
+      .limit(5)
+      .execute();
+
+    const latestInvoices = data.map((invoice) => ({
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
@@ -63,15 +49,25 @@ export async function fetchLatestInvoices() {
 export async function fetchCardData() {
   noStore();
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = pool.query(`SELECT COUNT(*) FROM invoices`);
-    const customerCountPromise = pool.query(`SELECT COUNT(*) FROM customers`);
-    const invoiceStatusPromise = pool.query(`SELECT
-         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-         SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-         FROM invoices`);
+    const invoiceCountPromise = await db
+      .selectFrom('invoices')
+      .select(db.fn.countAll().as('count'))
+      .executeTakeFirstOrThrow();
+    const customerCountPromise = await db
+      .selectFrom('customers')
+      .select(db.fn.countAll().as('count'))
+      .executeTakeFirstOrThrow();
+    const invoiceStatusPromise = await db
+      .selectFrom('invoices')
+      .select([
+        sql<string>`SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END)`.as(
+          'paid',
+        ),
+        sql<string>`SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END)`.as(
+          'pending',
+        ),
+      ])
+      .execute();
 
     const data = await Promise.all([
       invoiceCountPromise,
@@ -79,10 +75,10 @@ export async function fetchCardData() {
       invoiceStatusPromise,
     ]);
 
-    const numberOfInvoices = Number(data[0].rows[0].count ?? '0');
-    const numberOfCustomers = Number(data[1].rows[0].count ?? '0');
-    const totalPaidInvoices = formatCurrency(data[2].rows[0].paid ?? '0');
-    const totalPendingInvoices = formatCurrency(data[2].rows[0].pending ?? '0');
+    const numberOfInvoices = Number(data[0].count ?? '0');
+    const numberOfCustomers = Number(data[1].count ?? '0');
+    const totalPaidInvoices = formatCurrency(data[2][0].paid ?? '0');
+    const totalPendingInvoices = formatCurrency(data[2][0].pending ?? '0');
 
     return {
       numberOfCustomers,
@@ -105,30 +101,32 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await pool.query(
-      `
-      SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-      customers.name ILIKE '%${query}%' OR
-      customers.email ILIKE '%${query}%' OR
-      invoices.amount::text ILIKE '%${query}%' OR
-      invoices.date::text ILIKE '%${query}%' OR
-      invoices.status ILIKE '%${query}%'
-      ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `,
-    );
-
-    return invoices.rows;
+    const invoices = await db
+      .selectFrom(['invoices', 'customers'])
+      .whereRef('invoices.customer_id', '=', 'customers.id')
+      .select([
+        'invoices.id',
+        'invoices.amount',
+        'invoices.date',
+        'invoices.status',
+        'customers.name',
+        'customers.email',
+        'customers.image_url',
+      ])
+      .where((eb) =>
+        eb.or([
+          eb(sql`customers.name`, 'ilike', '%' + query + '%'),
+          eb(sql`customers.email`, 'ilike', '%' + query + '%'),
+          eb(sql`invoices.amount::text`, 'ilike', '%' + query + '%'),
+          eb(sql`invoices.date::text`, 'ilike', '%' + query + '%'),
+          eb(sql`invoices.status`, 'ilike', '%' + query + '%'),
+        ]),
+      )
+      .orderBy('invoices.date desc')
+      .limit(ITEMS_PER_PAGE)
+      .offset(offset)
+      .execute();
+    return invoices;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
@@ -137,21 +135,24 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string) {
   try {
- 
     noStore();
-  
-    const count = await pool.query(`SELECT COUNT(*)
-    FROM invoices
-    JOIN customers ON invoices.customer_id = customers.id
-    WHERE
-      customers.name ILIKE '%${query}%' OR
-      customers.email ILIKE '%${query}%' OR
-      invoices.amount::text ILIKE '%${query}%' OR
-      invoices.date::text ILIKE '%${query}%' OR
-      invoices.status ILIKE '%${query}%'
-  `); 
 
-    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    const count = await db
+      .selectFrom(['invoices', 'customers'])
+      .whereRef('invoices.customer_id', '=', 'customers.id')
+      .select(db.fn.countAll().as('count'))
+      .where((eb) =>
+        eb.or([
+          eb(sql`customers.name`, 'ilike', '%' + query + '%'),
+          eb(sql`customers.email`, 'ilike', '%' + query + '%'),
+          eb(sql`invoices.amount::text`, 'ilike', '%' + query + '%'),
+          eb(sql`invoices.date::text`, 'ilike', '%' + query + '%'),
+          eb(sql`invoices.status`, 'ilike', '%' + query + '%'),
+        ]),
+      )
+      .executeTakeFirstOrThrow();
+
+    const totalPages = Math.ceil(Number(count.count) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
     console.error('Database Error:', error);
@@ -162,25 +163,24 @@ export async function fetchInvoicesPages(query: string) {
 export async function fetchInvoiceById(id: string) {
   noStore();
   try {
-    const data = await pool.query(
-      `
-      SELECT
-        invoices.id,
-        invoices.customer_id,
-        invoices.amount,
-        invoices.status
-      FROM invoices
-      WHERE invoices.id = '${id}';
-    `,
-    );
+    const data = await db
+      .selectFrom('invoices')
+      .select([
+        'invoices.id',
+        'invoices.customer_id',
+        'invoices.amount',
+        'invoices.status',
+      ])
+      .where('invoices.id', '=', id)
+      .executeTakeFirst();
 
-    const invoice = data.rows.map((invoice) => ({
-      ...invoice,
-      // Convert amount from cents to dollars
-      amount: invoice.amount / 100,
-    }));
+    const invoice = {};
+    invoice.amount = data.amount / 100;
+    invoice.id = data.id;
+    invoice.customer_id = data.customer_id;
+    invoice.status = data.status;
 
-    return invoice[0];
+    return invoice;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');
@@ -189,15 +189,13 @@ export async function fetchInvoiceById(id: string) {
 
 export async function fetchCustomers() {
   try {
-    const data = await pool.query(`
-      SELECT
-        id,
-        name
-      FROM customers
-      ORDER BY name ASC
-    `);
+    const data = await db
+      .selectFrom('customers')
+      .select(['id', 'name'])
+      .orderBy('name asc')
+      .execute();
 
-    const customers = data.rows;
+    const customers = data;
     return customers;
   } catch (err) {
     console.error('Database Error:', err);
@@ -208,27 +206,39 @@ export async function fetchCustomers() {
 export async function fetchFilteredCustomers(query: string) {
   noStore();
   try {
-    const data = await pool.query(
-      `
-		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE '%${query}%' OR
-        customers.email ILIKE '%${query}%'
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `,
-    );
 
-    const customers = data.rows.map((customer) => ({
+    const data = await db
+      .selectFrom(['customers', 'invoices'])
+      .whereRef('invoices.customer_id', '=', 'customers.id')
+      .select([
+        'customers.id',
+        'customers.name',
+        'customers.email',
+        'customers.image_url',
+        sql<string>`COUNT(invoices.id)`.as('total_invoices'),
+        sql<string>`SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END)`.as(
+          'total_pending',
+        ),
+        sql<string>`SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END)`.as(
+          'total_paid',
+        ),
+      ])
+      .where((eb) =>
+        eb.or([
+          eb(sql`customers.name`, 'ilike', '%' + query + '%'),
+          eb(sql`customers.email`, 'ilike', '%' + query + '%'),
+        ]),
+      )
+      .groupBy('customers.id')
+      .groupBy('customers.name')
+      .groupBy('customers.email')
+      .groupBy('customers.image_url')
+      .orderBy('customers.name asc')
+      .execute();
+
+    console.log(data);
+
+    const customers = data.map((customer) => ({
       ...customer,
       total_pending: formatCurrency(customer.total_pending),
       total_paid: formatCurrency(customer.total_paid),
@@ -243,8 +253,12 @@ export async function fetchFilteredCustomers(query: string) {
 
 export async function getUser(email: string) {
   try {
-    const user = await pool.query(`SELECT * FROM users WHERE email=${email}`);
-    return user.rows[0] as User;
+    const user = await db
+      .selectFrom('users')
+      .selectAll()
+      .whereRef('email', '=', email)
+      .executeTakeFirst();
+    return user as User;
   } catch (error) {
     console.error('Failed to fetch user:', error);
     throw new Error('Failed to fetch user.');

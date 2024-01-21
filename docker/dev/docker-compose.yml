@@ -4,7 +4,7 @@ services:
     image: postgres:15
     restart: unless-stopped
     volumes:
-      - ../../db:/var/lib/postgresql/data
+      - ../../psql:/var/lib/postgresql/data
     env_file:
       - .env
     healthcheck:
@@ -39,3 +39,6 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=postgres
+
+
+  ## npx drizzle-kit studio --port 3001

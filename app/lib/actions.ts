@@ -1,18 +1,11 @@
 'use server';
 
-import dotenv from "dotenv";
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Pool } from 'pg';
-const pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-});
+import { db } from './database';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -62,10 +55,15 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
   // Insert data into the database
   try {
-    await pool.query(`
-      INSERT INTO invoices (customer_id, amount, status, date)
-      VALUES ('${customerId}', ${amountInCents}, '${status}', '${date}')
-    `);
+    await db
+      .insertInto('invoices')
+      .values({
+        customer_id: customerId,
+        amount: amountInCents,
+        status: status,
+        date: date,
+      })
+      .executeTakeFirst();
   } catch (error) {
     // If a database error occurs, return a more specific error.
     console.error('Database Error:', error);
@@ -103,11 +101,15 @@ export async function updateInvoice(
   const amountInCents = amount * 100;
 
   try {
-    await pool.query(`
-      UPDATE invoices
-      SET customer_id = '${customerId}', amount = ${amountInCents}, status = '${status}'
-      WHERE id = '${id}'
-    `);
+    await db
+      .updateTable('invoices')
+      .set({
+        customer_id: customerId,
+        amount: amountInCents,
+        status: status,
+      })
+      .where('id', '=', id)
+      .executeTakeFirst();
   } catch (error) {
     return { message: 'Database Error: Failed to Update Invoice.' };
   }
@@ -118,7 +120,7 @@ export async function updateInvoice(
 
 export async function deleteInvoice(id: string) {
   try {
-    await pool.query(`DELETE FROM invoices WHERE id = '${id}'`);
+    await db.deleteFrom('invoices').where('id', '=', id).executeTakeFirst();
     revalidatePath('/dashboard/invoices');
     return { message: 'Deleted Invoice.' };
   } catch (error) {

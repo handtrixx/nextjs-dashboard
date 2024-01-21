@@ -1,4 +1,6 @@
 const { Pool } = require('pg');
+const { db } = require ('./database.ts');
+const { sql } = require ('kysely');
 // Create a pool instance and pass in our config, which we set in our env vars
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
