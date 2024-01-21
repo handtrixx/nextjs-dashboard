@@ -3,6 +3,9 @@
 # database
 /psql
 
+#vscode
+/.vscode
+
 # docker stuff
 /startup-script.sh
 
