@@ -1,6 +1,4 @@
 const { Pool } = require('pg');
-const { db } = require ('./database.ts');
-const { sql } = require ('kysely');
 // Create a pool instance and pass in our config, which we set in our env vars
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
@@ -46,10 +44,10 @@ async function seedUsers() {
         const hashedPassword = await bcrypt.hash(user.password, 10);
         return pool.query(
           `
-        INSERT INTO users (id, name, email, password)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (id) DO NOTHING;
-      `,
+            INSERT INTO users (id, name, email, password)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (id) DO NOTHING;
+          `,
           [user.id, user.name, user.email, hashedPassword],
         );
       }),
@@ -179,8 +177,8 @@ async function seedRevenue() {
 
     console.log(`Created "revenue" table`);
 
-        //truncate table conntent
-        const truncateRevenue= await pool.query(`
+    //truncate table conntent
+    const truncateRevenue = await pool.query(`
         TRUNCATE TABLE revenue
       `);
     console.log(`Truncated "revenue" table`);

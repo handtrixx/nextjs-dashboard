@@ -7,7 +7,7 @@
     "prettier:check": "prettier --check --ignore-unknown .",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node -r dotenv/config ./app/lib/seed.ts"
+    "seed": "node -r dotenv/config ./scripts/createDB.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
@@ -33,6 +33,7 @@
     "tedious": "^16.6.1",
     "typescript": "5.2.2",
     "use-debounce": "^10.0.0",
+    "uuid": "^9.0.1",
     "zod": "^3.22.2"
   },
   "devDependencies": {

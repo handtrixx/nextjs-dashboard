@@ -236,8 +236,6 @@ export async function fetchFilteredCustomers(query: string) {
       .orderBy('customers.name asc')
       .execute();
 
-    console.log(data);
-
     const customers = data.map((customer) => ({
       ...customer,
       total_pending: formatCurrency(customer.total_pending),

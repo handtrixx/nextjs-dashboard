@@ -19,11 +19,11 @@ switch (dbType) {
   case 'MYSQL':
     var dialect = new MysqlDialect({
       pool: createPool({
-        database: 'test',
-        host: 'localhost',
-        user: 'admin',
-        password: '123',
-        port: 3308,
+        database: process.env.MYSQL_DB,
+        host: process.env.MYSQL_HOST,
+        user: process.env.MYSQL_USER,
+        password: process.env.MYSQL_PASSWORD,
+        port: process.env.MYSQL_PORT,
         connectionLimit: 10,
       }),
     });
@@ -78,6 +78,6 @@ switch (dbType) {
     break;
 }
 
-export const db = new Kysely<Database>({
+export const db = new Kysely<DB>({
   dialect,
 });

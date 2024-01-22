@@ -13,6 +13,9 @@ COPY --chown=node:node ../../. .
 # update npm package manager if required
 RUN npm install -g npm
 
+# update npm packages
+RUN npm update
+
 # Copy the startup script to the container
 COPY --chown=node:node app-startup.sh /usr/src/app/app-startup.sh
 

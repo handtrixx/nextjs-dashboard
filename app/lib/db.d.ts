@@ -39,10 +39,3 @@ export interface DB {
   revenue: Revenue;
   users: Users;
 }
-
-export interface Database {
-  customers: Customers;
-  invoices: Invoices;
-  revenue: Revenue;
-  users: Users;
-}
